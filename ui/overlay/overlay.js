@@ -18,6 +18,9 @@ const ICONS = {
   note: 'M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z',
   link: 'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4a5 5 0 0 0 0-10z',
   offline: 'M23.64 7c-.45-.34-4.93-4-11.64-4-1.5 0-2.89.19-4.15.48L18.18 13.8 23.64 7zm-6.6 8.22L3.27 1.44 2 2.72l2.05 2.06C1.91 5.76.59 6.82.36 7l11.63 14.49.01.01.01-.01 3.9-4.86 3.32 3.32 1.27-1.27-3.46-3.46z',
+  volumeUp: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z',
+  volumeDown: 'M18.5 12A4.5 4.5 0 0 0 16 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z',
+  volumeOff: 'M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z',
 };
 const svg = (name, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`;
 const DEFAULT_ACCENT = [30, 215, 96];
@@ -38,6 +41,8 @@ let jamOpen = false;
 let jamStartHandled = false;
 let pendingVolume = null;
 let volumeTimer = 0;
+let volumeOpen = false;
+let lastVolume = 50;
 let toastTimer = 0;
 let emptyAction = null;
 
@@ -67,6 +72,7 @@ async function init() {
   api.onJamToggle(() => toggleJam());
   api.onClickThrough((on) => {
     card.classList.toggle('interactive', !on);
+    if (on) closeVolume();
     toast(on ? 'Click-through on · Ctrl+Alt+S to turn it off' : 'Click-through off');
   });
 
@@ -95,6 +101,7 @@ function applyConfig(prev) {
   if (prev.lyricsOffsetMs !== cfg.lyricsOffsetMs) activeIdx = -2;
   if (!cfg.jamEnabled && jamOpen) closeJam();
   if (jamOpen && prev.jamLink !== cfg.jamLink) refreshJam();
+  if (prev.layout !== cfg.layout || prev.scale !== cfg.scale) closeVolume();
   if (prev.layout !== cfg.layout || prev.lyricsFontSize !== cfg.lyricsFontSize) {
     requestAnimationFrame(() => {
       updateMarquee();
@@ -144,6 +151,10 @@ function setPlayer(s) {
     el.classList.toggle('on', s.repeat !== 'off');
     el.classList.toggle('alt', s.repeat === 'track');
   }
+  // Some devices (and non-Premium accounts) don't report a volume.
+  card.classList.toggle('no-volume', s.volume == null);
+  if (s.volume == null) closeVolume();
+  updateVolumeUi();
 
   updateEmpty();
   updateFooter();
@@ -499,7 +510,7 @@ function bindEvents() {
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (btn) {
-      handleAction(btn.dataset.action);
+      handleAction(btn.dataset.action, btn);
       return;
     }
     const line = e.target.closest('.line');
@@ -543,19 +554,26 @@ function bindEvents() {
     api.command('seek', ratio(e) * P.track.durationMs);
   });
 
-  // Mouse wheel over the cover changes the volume.
-  $('player').addEventListener('wheel', (e) => {
+  // Mouse wheel over the cover, the speaker button or the volume panel changes the volume.
+  const wheelVolume = (e, showToast) => {
     e.preventDefault();
-    if (P.volume == null) return;
-    const v = Math.min(100, Math.max(0, (pendingVolume ?? P.volume) + (e.deltaY < 0 ? 5 : -5)));
-    pendingVolume = v;
-    toast(`Volume ${v}%`, 900);
-    clearTimeout(volumeTimer);
-    volumeTimer = setTimeout(() => {
-      api.command('volume', v);
-      pendingVolume = null;
-    }, 250);
-  }, { passive: false });
+    e.stopPropagation();
+    setVolume(currentVolume() + (e.deltaY < 0 ? 5 : -5), showToast);
+  };
+  $('player').addEventListener('wheel', (e) => wheelVolume(e, true), { passive: false });
+  for (const el of $$('[data-action="volume"]')) {
+    el.addEventListener('wheel', (e) => wheelVolume(e, !volumeOpen), { passive: false });
+  }
+  $('volumePop').addEventListener('wheel', (e) => wheelVolume(e, false), { passive: false });
+  $('volumeSlider').addEventListener('input', (e) => setVolume(Number(e.target.value), false));
+
+  // The volume panel closes when clicking elsewhere or leaving the overlay.
+  document.addEventListener('pointerdown', (e) => {
+    if (volumeOpen && !e.target.closest('#volumePop, [data-action="volume"]')) closeVolume();
+  });
+  card.addEventListener('mouseleave', (e) => {
+    if (e.buttons === 0) closeVolume();
+  });
 
   // Manual scrolling pauses auto-follow for a few seconds.
   $('lyricsScroll').addEventListener('wheel', () => {
@@ -563,11 +581,13 @@ function bindEvents() {
   }, { passive: true });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && jamOpen) closeJam();
+    if (e.key !== 'Escape') return;
+    if (volumeOpen) closeVolume();
+    else if (jamOpen) closeJam();
   });
 }
 
-function handleAction(action) {
+function handleAction(action, btn) {
   switch (action) {
     case 'toggle':
     case 'next':
@@ -586,10 +606,96 @@ function handleAction(action) {
     case 'jam':
       toggleJam();
       break;
+    case 'volume':
+      if (volumeOpen) closeVolume();
+      else openVolume(btn);
+      break;
+    case 'mute':
+      setVolume(currentVolume() === 0 ? lastVolume : 0, false);
+      break;
     case 'jamCopy':
       api.copy(jamUrl()).then(() => toast('Link copied!'));
       break;
   }
+}
+
+// ------------------------------------------------------------------ volume
+function currentVolume() {
+  return pendingVolume ?? P.volume ?? 0;
+}
+
+// Updates the UI right away and sends the value to Spotify once the user pauses.
+function setVolume(value, showToast) {
+  if (P.volume == null) return;
+  const v = Math.round(Math.min(100, Math.max(0, value)));
+  pendingVolume = v;
+  updateVolumeUi();
+  if (showToast) toast(`Volume ${v}%`, 900);
+  clearTimeout(volumeTimer);
+  volumeTimer = setTimeout(() => {
+    api.command('volume', v).finally(() => {
+      if (pendingVolume !== v) return;
+      pendingVolume = null;
+      updateVolumeUi();
+    });
+  }, 200);
+}
+
+function updateVolumeUi() {
+  const v = currentVolume();
+  if (v > 0) lastVolume = v;
+  const icon = v === 0 ? 'volumeOff' : v < 50 ? 'volumeDown' : 'volumeUp';
+  for (const el of $$('[data-volume], #volumeMute')) {
+    if (el.dataset.shown === icon) continue;
+    el.dataset.shown = icon;
+    el.innerHTML = svg(icon);
+  }
+  for (const el of $$('[data-action="volume"]')) {
+    el.classList.toggle('on', volumeOpen);
+    el.setAttribute('aria-expanded', String(volumeOpen));
+  }
+  $('volumeMute').title = v === 0 ? 'Unmute' : 'Mute';
+  const slider = $('volumeSlider');
+  slider.value = String(v);
+  slider.style.setProperty('--v', `${v}%`);
+  $('volumeValue').textContent = `${v}%`;
+}
+
+function openVolume(anchor) {
+  if (P.volume == null || !anchor) return;
+  volumeOpen = true;
+  $('volumePop').hidden = false;
+  updateVolumeUi();
+  placeVolume(anchor);
+}
+
+function closeVolume() {
+  if (!volumeOpen) return;
+  volumeOpen = false;
+  $('volumePop').hidden = true;
+  updateVolumeUi();
+}
+
+// Places the panel under its button (or above / centered when there's no room),
+// kept inside the card. Offsets instead of getBoundingClientRect stay correct
+// when the page is zoomed by the Size setting.
+function placeVolume(anchor) {
+  const pop = $('volumePop');
+  let x = 0;
+  let y = 0;
+  for (let el = anchor; el && el !== card; el = el.offsetParent) {
+    x += el.offsetLeft;
+    y += el.offsetTop;
+  }
+  const gap = 6;
+  const w = pop.offsetWidth;
+  const h = pop.offsetHeight;
+  let top = y + anchor.offsetHeight + gap;
+  if (top + h > card.clientHeight - gap) top = y - h - gap;
+  if (top < gap) top = Math.max(gap, (card.clientHeight - h) / 2);
+  const left = Math.min(x + anchor.offsetWidth / 2 - w / 2, card.clientWidth - w - gap);
+  pop.style.top = `${top}px`;
+  pop.style.left = `${Math.max(gap, left)}px`;
 }
 
 // ----------------------------------------------------------------- helpers

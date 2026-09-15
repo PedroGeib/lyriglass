@@ -17,6 +17,7 @@
       <header class="topbar reveal">
         <button class="icon sm like" data-action="like" data-icon="heart|heartFilled" title="Like"></button>
         <button class="icon sm" data-action="jam" data-jam data-icon="jam" title="Jam mode"></button>
+        <button class="icon sm" data-action="volume" data-volume data-icon="volumeUp" title="Volume" aria-haspopup="true" aria-expanded="false"></button>
         <span class="spacer"></span>
         <button class="icon sm" data-action="menu" data-icon="dots" title="Menu"></button>
         <button class="icon sm" data-action="hide" data-icon="minus" title="Hide (Ctrl+Alt+H)"></button>
@@ -48,6 +49,7 @@
         <div class="mini-meta" id="miniMeta"></div>
         <div class="mini-actions reveal">
           <button class="icon xs" data-action="next" data-icon="next" title="Next"></button>
+          <button class="icon xs" data-action="volume" data-volume data-icon="volumeUp" title="Volume" aria-haspopup="true" aria-expanded="false"></button>
           <button class="icon xs like" data-action="like" data-icon="heart|heartFilled" title="Like"></button>
           <button class="icon xs" data-action="jam" data-jam data-icon="jam" title="Jam mode"></button>
           <button class="icon xs" data-action="menu" data-icon="dots" title="Menu"></button>
@@ -87,6 +89,12 @@
           <button class="pill ghost" data-action="jam">Close</button>
         </div>
       </div>
+    </div>
+
+    <div class="volume-pop" id="volumePop" role="group" aria-label="Volume" hidden>
+      <button class="icon xs" data-action="mute" id="volumeMute" title="Mute"></button>
+      <input type="range" id="volumeSlider" min="0" max="100" step="1" aria-label="Volume">
+      <span class="volume-value" id="volumeValue">0%</span>
     </div>
 
     <div class="toast" id="toast"></div>

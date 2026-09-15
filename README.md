@@ -62,7 +62,8 @@ On the overlay:
 
 | Gesture | Action |
 | --- | --- |
-| Scroll over the cover | Volume |
+| Click the speaker icon | Volume slider and mute |
+| Scroll over the cover or the speaker icon | Volume |
 | Click a line | Jump to that part of the song |
 | Scroll the lyrics | Browse freely for 4 s |
 | Right-click | Quick menu |
