@@ -255,7 +255,7 @@ impl Core {
                 if s.track.is_none() {
                     s.status = "error".into();
                 }
-                s.message = Some(format!("Spotify respondeu {code}"));
+                s.message = Some(format!("Spotify responded with HTTP {code}"));
             });
             return Some(10_000);
         }
@@ -330,7 +330,10 @@ impl Core {
                 return;
             }
             let Ok(res) = me.spotify.request(Method::GET, "/me/player/queue", &[]).await else { return };
-            let next = res.data["queue"].get(0).map(|q| NextUp {
+            // Spotify sometimes lists the playing track again at the head of the queue
+            // (right after a track change, or during autoplay), so skip copies of it.
+            let queue = res.data["queue"].as_array().cloned().unwrap_or_default();
+            let next = queue.iter().find(|q| !is_same_track(q, &track)).map(|q| NextUp {
                 name: q["name"].as_str().unwrap_or("").into(),
                 artists: if q["type"] == "episode" {
                     vec![q["show"]["name"].as_str().unwrap_or("").into()]
@@ -509,7 +512,7 @@ impl Core {
         }
         match error["message"].as_str() {
             Some(m) => self.fail(&format!("Spotify: {m}")),
-            None => self.fail(&format!("Spotify respondeu {}", res.status)),
+            None => self.fail(&format!("Spotify responded with HTTP {}", res.status)),
         }
     }
 
@@ -518,6 +521,17 @@ impl Core {
         self.poke(300);
         json!({ "ok": false, "message": message })
     }
+}
+
+/// Whether a queue item is the given track. Relinked tracks can come back with
+/// another id, so name and main artist are compared too.
+fn is_same_track(item: &Value, track: &Track) -> bool {
+    if item["id"].as_str() == Some(track.id.as_str()) || item["uri"].as_str() == Some(track.uri.as_str()) {
+        return true;
+    }
+    let name = item["name"].as_str().unwrap_or("");
+    let artist = item["artists"][0]["name"].as_str().or_else(|| item["show"]["name"].as_str()).unwrap_or("");
+    !name.is_empty() && name.eq_ignore_ascii_case(&track.name) && track.artists.first().is_some_and(|a| a.eq_ignore_ascii_case(artist))
 }
 
 fn normalize_track(item: &Value) -> Track {

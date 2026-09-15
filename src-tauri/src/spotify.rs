@@ -204,7 +204,7 @@ impl Spotify {
         let data: Value = res.json().await.unwrap_or(Value::Null);
         if !status.is_success() || data.get("access_token").is_none() {
             let msg = data["error_description"].as_str().or(data["error"].as_str());
-            return Err(msg.map(String::from).unwrap_or_else(|| format!("Falha no token (HTTP {})", status.as_u16())));
+            return Err(msg.map(String::from).unwrap_or_else(|| format!("Token request failed (HTTP {})", status.as_u16())));
         }
         Ok(data)
     }

@@ -437,7 +437,8 @@ function updateCompact() {
 function updateFooter() {
   const next = $('nextUp');
   next.textContent = '';
-  if (cfg.showNextUp && P.nextUp && P.track) {
+  // With repeat-one on, the next song is the current one, so there's nothing to show.
+  if (cfg.showNextUp && P.nextUp && P.track && P.repeat !== 'track') {
     const b = document.createElement('b');
     b.textContent = P.nextUp.name;
     next.append('Up next: ', b, ` · ${P.nextUp.artists.join(', ')}`);
