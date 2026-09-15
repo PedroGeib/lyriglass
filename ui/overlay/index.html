@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Lyriglass</title>
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <main id="card" class="card layout-horizontal interactive">
+    <div class="card-bg" id="cardBg"></div>
+    <div class="grip" title="Arraste para mover" data-tauri-drag-region></div>
+
+    <section class="player" id="player">
+      <div class="art placeholder" id="art"></div>
+      <div class="scrim"></div>
+
+      <header class="topbar reveal">
+        <button class="icon sm like" data-action="like" data-icon="heart|heartFilled" title="Curtir"></button>
+        <button class="icon sm" data-action="jam" data-jam data-icon="jam" title="Modo Jam"></button>
+        <span class="spacer"></span>
+        <button class="icon sm" data-action="menu" data-icon="dots" title="Menu"></button>
+        <button class="icon sm" data-action="hide" data-icon="minus" title="Ocultar (Ctrl+Alt+H)"></button>
+      </header>
+
+      <div class="transport reveal">
+        <button class="icon sm hide-mini shuffle" data-action="shuffle" data-icon="shuffle" title="Aleatório"></button>
+        <button class="icon hide-mini" data-action="prev" data-icon="prev" title="Anterior"></button>
+        <button class="icon play" data-action="toggle" data-icon="play|pause" title="Play / pause"></button>
+        <button class="icon hide-mini" data-action="next" data-icon="next" title="Próxima"></button>
+        <button class="icon sm hide-mini repeat" data-action="repeat" data-icon="repeat|repeatOne" title="Repetir"></button>
+      </div>
+
+      <div class="meta">
+        <div class="title" id="title"><span id="titleText"></span></div>
+        <div class="artist" id="artist"></div>
+      </div>
+
+      <div class="timeline reveal">
+        <span class="time" id="tCur">0:00</span>
+        <div class="bar" id="bar"><div class="fill"></div></div>
+        <span class="time" id="tDur">0:00</span>
+      </div>
+      <div class="edge"><div class="fill"></div></div>
+    </section>
+
+    <section class="lyrics" id="lyrics">
+      <header class="mini-head">
+        <div class="mini-meta" id="miniMeta"></div>
+        <div class="mini-actions reveal">
+          <button class="icon xs" data-action="next" data-icon="next" title="Próxima"></button>
+          <button class="icon xs like" data-action="like" data-icon="heart|heartFilled" title="Curtir"></button>
+          <button class="icon xs" data-action="jam" data-jam data-icon="jam" title="Modo Jam"></button>
+          <button class="icon xs" data-action="menu" data-icon="dots" title="Menu"></button>
+        </div>
+      </header>
+      <div class="lyrics-scroll" id="lyricsScroll"><div class="lyrics-inner" id="lyricsInner"></div></div>
+      <div class="lyrics-status" id="lyricsStatus"></div>
+      <footer class="lyrics-foot" id="lyricsFoot">
+        <span class="next" id="nextUp"></span>
+        <span class="tag" id="lyricsTag"></span>
+      </footer>
+    </section>
+
+    <div class="edge mini-edge"><div class="fill"></div></div>
+
+    <div class="empty" id="empty" hidden>
+      <div class="empty-actions reveal">
+        <button class="icon xs" data-action="menu" data-icon="dots" title="Menu"></button>
+        <button class="icon xs" data-action="hide" data-icon="minus" title="Ocultar"></button>
+      </div>
+      <div class="empty-icon" id="emptyIcon"></div>
+      <div class="empty-text">
+        <div class="empty-title" id="emptyTitle"></div>
+        <div class="empty-sub" id="emptySub"></div>
+      </div>
+      <button class="pill" id="emptyAction" hidden></button>
+    </div>
+
+    <div class="jam" id="jam" hidden>
+      <img class="jam-qr" id="jamQr" alt="QR Code">
+      <div class="jam-info">
+        <div class="jam-label">Modo Jam</div>
+        <div class="jam-title" id="jamTitle"></div>
+        <div class="jam-sub" id="jamSub"></div>
+        <div class="jam-buttons">
+          <button class="pill" data-action="jamCopy">Copiar link</button>
+          <button class="pill ghost" data-action="jam">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </main>
+  <script src="../api.js"></script>
+  <script src="overlay.js"></script>
+</body>
+</html>

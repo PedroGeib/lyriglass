@@ -1,0 +1,17 @@
+node_modules/
+src-tauri/target/
+src-tauri/gen/
+*.log
+
+# Local secrets and app data (never commit)
+.env
+.env.*
+secrets.dat
+config.json
+lyrics-cache/
+
+# Editors and OS files
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
