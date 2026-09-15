@@ -219,7 +219,7 @@ impl Core {
             Err(ApiError::RateLimit(secs)) => {
                 if now_ms() - self.last_rate_toast.load(Ordering::Relaxed) > 60_000 {
                     self.last_rate_toast.store(now_ms(), Ordering::Relaxed);
-                    self.toast(format!("Limite da API do Spotify — aguardando {secs}s"));
+                    self.toast(format!("Spotify API rate limit: waiting {secs}s"));
                 }
                 return Some(secs * 1000);
             }
@@ -229,7 +229,7 @@ impl Core {
                     if s.track.is_none() {
                         s.status = "error".into();
                     }
-                    s.message = Some("Sem conexão com o Spotify".into());
+                    s.message = Some("No connection to Spotify".into());
                 });
                 return Some(8000);
             }
@@ -459,14 +459,14 @@ impl Core {
                     self.update(|st| st.liked = Some(v));
                     if !self.spotify.set_saved(&track.id, v).await {
                         self.update(|st| st.liked = Some(!v));
-                        return Ok(self.fail("Não foi possível atualizar suas Músicas Curtidas."));
+                        return Ok(self.fail("Couldn’t update your Liked Songs."));
                     }
-                    self.toast(if v { "Adicionada às Músicas Curtidas" } else { "Removida das Músicas Curtidas" });
+                    self.toast(if v { "Added to Liked Songs" } else { "Removed from Liked Songs" });
                     Ok(json!({ "ok": true }))
                 }
                 "resync" => {
                     if let Some(track) = s.track {
-                        self.toast("Buscando a letra novamente…");
+                        self.toast("Fetching lyrics again…");
                         self.clone().load_lyrics(track, true).await;
                         self.poke(0);
                     }
@@ -479,9 +479,9 @@ impl Core {
 
         match result {
             Ok(v) => v,
-            Err(ApiError::Auth) => self.fail("Conecte sua conta do Spotify nas configurações."),
-            Err(ApiError::RateLimit(_)) => self.fail("Limite da API do Spotify — tente em alguns segundos."),
-            Err(ApiError::Other(_)) => self.fail("Sem conexão com o Spotify."),
+            Err(ApiError::Auth) => self.fail("Connect your Spotify account in Settings."),
+            Err(ApiError::RateLimit(_)) => self.fail("Spotify API rate limit: try again in a few seconds."),
+            Err(ApiError::Other(_)) => self.fail("No connection to Spotify."),
         }
     }
 
@@ -502,10 +502,10 @@ impl Core {
         }
         let error = &res.data["error"];
         if res.status == 403 && error["reason"] == "PREMIUM_REQUIRED" {
-            return self.fail("Os controles exigem Spotify Premium.");
+            return self.fail("Playback controls require Spotify Premium.");
         }
         if res.status == 404 {
-            return self.fail("Nenhum dispositivo ativo no Spotify.");
+            return self.fail("No active Spotify device.");
         }
         match error["message"].as_str() {
             Some(m) => self.fail(&format!("Spotify: {m}")),
@@ -531,7 +531,7 @@ fn normalize_track(item: &Value) -> Track {
         id: item["id"].as_str().or(item["uri"].as_str()).unwrap_or_default().to_string(),
         uri: item["uri"].as_str().unwrap_or_default().to_string(),
         kind: item["type"].as_str().unwrap_or("track").to_string(),
-        name: item["name"].as_str().unwrap_or("Sem título").to_string(),
+        name: item["name"].as_str().unwrap_or("Untitled").to_string(),
         artists: if episode {
             vec![item["show"]["name"].as_str().unwrap_or("Podcast").to_string()]
         } else {

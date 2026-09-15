@@ -1,4 +1,4 @@
-// `api` é exposto globalmente pelo preload (contextBridge); não redeclarar.
+// `api` is created by ../api.js (bridge to the Tauri backend); don’t redeclare it.
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -67,7 +67,7 @@ async function init() {
   api.onJamToggle(() => toggleJam());
   api.onClickThrough((on) => {
     card.classList.toggle('interactive', !on);
-    toast(on ? 'Click-through ativado · Ctrl+Alt+S para desativar' : 'Click-through desativado');
+    toast(on ? 'Click-through on · Ctrl+Alt+S to turn it off' : 'Click-through off');
   });
 
   bindEvents();
@@ -132,11 +132,11 @@ function setPlayer(s) {
   const playing = s.status === 'playing';
   for (const el of $$('[data-action="toggle"]')) {
     el.classList.toggle('alt', playing);
-    el.title = playing ? 'Pausar' : 'Tocar';
+    el.title = playing ? 'Pause' : 'Play';
   }
   for (const el of $$('.like')) {
     el.classList.toggle('alt', Boolean(s.liked));
-    el.title = s.liked ? 'Remover das Músicas Curtidas' : 'Curtir';
+    el.title = s.liked ? 'Remove from Liked Songs' : 'Like';
   }
   card.classList.toggle('no-like', !t || t.type !== 'track' || t.isLocal);
   for (const el of $$('.shuffle')) el.classList.toggle('on', s.shuffle);
@@ -204,7 +204,7 @@ function setAccent([r, g, b]) {
   document.documentElement.style.setProperty('--accent', `${r} ${g} ${b}`);
 }
 
-// Escolhe a cor mais "vibrante" da capa agrupando pixels por matiz.
+// Picks the most vibrant cover color by grouping pixels by hue.
 function extractAccent(img) {
   try {
     const size = 32;
@@ -262,15 +262,15 @@ function renderLyrics() {
   }
   if (L.status !== 'ready') return;
   if (!hasLines) {
-    status.textContent = L.episode ? 'Episódio de podcast'
-      : L.instrumental ? '♪ Faixa instrumental'
-      : L.error ? 'Não foi possível buscar a letra'
-      : cfg.layout === 'mini' ? (P.track.album || 'Letra não encontrada')
-      : 'Letra não encontrada';
+    status.textContent = L.episode ? 'Podcast episode'
+      : L.instrumental ? '♪ Instrumental'
+      : L.error ? 'Couldn’t fetch the lyrics'
+      : cfg.layout === 'mini' ? (P.track.album || 'No lyrics found')
+      : 'No lyrics found';
     return;
   }
   if (!L.synced && cfg.layout === 'mini') {
-    status.textContent = 'Letra disponível só sem sincronia';
+    status.textContent = 'Only unsynced lyrics available';
     return;
   }
 
@@ -387,11 +387,11 @@ function updateEmpty() {
   const s = P.status;
   let view = null;
   if (s === 'auth') {
-    view = { icon: 'link', title: 'Conecte o Spotify', sub: 'Faça login para ver o que está tocando.', action: ['Conectar', () => api.openSettings('account')] };
+    view = { icon: 'link', title: 'Connect Spotify', sub: 'Log in to see what’s playing.', action: ['Connect', () => api.openSettings('account')] };
   } else if (!P.track) {
-    if (s === 'idle') view = { icon: 'note', title: 'Nada tocando', sub: 'Dê play no Spotify em qualquer dispositivo.' };
-    else if (s === 'error') view = { icon: 'offline', title: 'Sem conexão', sub: P.message || 'Tentando novamente…' };
-    else view = { icon: 'note', title: 'Carregando…', sub: '' };
+    if (s === 'idle') view = { icon: 'note', title: 'Nothing playing', sub: 'Press play in Spotify on any device.' };
+    else if (s === 'error') view = { icon: 'offline', title: 'No connection', sub: P.message || 'Retrying…' };
+    else view = { icon: 'note', title: 'Loading…', sub: '' };
   }
 
   $('empty').hidden = !view;
@@ -429,10 +429,10 @@ function updateFooter() {
   if (cfg.showNextUp && P.nextUp && P.track) {
     const b = document.createElement('b');
     b.textContent = P.nextUp.name;
-    next.append('A seguir: ', b, ` · ${P.nextUp.artists.join(', ')}`);
+    next.append('Up next: ', b, ` · ${P.nextUp.artists.join(', ')}`);
   }
   const tags = [];
-  if (L.status === 'ready' && L.lines.length && !L.synced) tags.push('sem sincronia');
+  if (L.status === 'ready' && L.lines.length && !L.synced) tags.push('unsynced');
   if (L.synced && cfg.lyricsOffsetMs) tags.push(`${cfg.lyricsOffsetMs > 0 ? '+' : ''}${cfg.lyricsOffsetMs} ms`);
   $('lyricsTag').textContent = tags.join(' · ');
 
@@ -470,10 +470,10 @@ function jamUrl() {
 
 async function refreshJam() {
   const hasLink = Boolean((cfg.jamLink || '').trim());
-  $('jamTitle').textContent = hasLink ? 'Entre na minha Jam' : 'Ouça comigo';
+  $('jamTitle').textContent = hasLink ? 'Join my Jam' : 'Listen with me';
   $('jamSub').textContent = hasLink
-    ? 'Aponte a câmera do celular para o QR Code.'
-    : P.track ? `${P.track.name} — ${P.track.artists.join(', ')}` : 'Abra o Spotify pelo QR Code.';
+    ? 'Point your phone camera at the QR code.'
+    : P.track ? `${P.track.name} — ${P.track.artists.join(', ')}` : 'Open Spotify with the QR code.';
   $('jamQr').src = await api.jamQr(jamUrl());
 }
 
@@ -543,7 +543,7 @@ function bindEvents() {
     api.command('seek', ratio(e) * P.track.durationMs);
   });
 
-  // Roda do mouse sobre a capa ajusta o volume.
+  // Mouse wheel over the cover changes the volume.
   $('player').addEventListener('wheel', (e) => {
     e.preventDefault();
     if (P.volume == null) return;
@@ -557,7 +557,7 @@ function bindEvents() {
     }, 250);
   }, { passive: false });
 
-  // Rolagem manual pausa o acompanhamento automático por alguns segundos.
+  // Manual scrolling pauses auto-follow for a few seconds.
   $('lyricsScroll').addEventListener('wheel', () => {
     if (L.synced) freeScrollUntil = Date.now() + 4000;
   }, { passive: true });
@@ -587,7 +587,7 @@ function handleAction(action) {
       toggleJam();
       break;
     case 'jamCopy':
-      api.copy(jamUrl()).then(() => toast('Link copiado!'));
+      api.copy(jamUrl()).then(() => toast('Link copied!'));
       break;
   }
 }

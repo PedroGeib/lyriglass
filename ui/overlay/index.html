@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Lyriglass</title>
@@ -8,26 +8,26 @@
 <body>
   <main id="card" class="card layout-horizontal interactive">
     <div class="card-bg" id="cardBg"></div>
-    <div class="grip" title="Arraste para mover" data-tauri-drag-region></div>
+    <div class="grip" title="Drag to move" data-tauri-drag-region></div>
 
     <section class="player" id="player">
       <div class="art placeholder" id="art"></div>
       <div class="scrim"></div>
 
       <header class="topbar reveal">
-        <button class="icon sm like" data-action="like" data-icon="heart|heartFilled" title="Curtir"></button>
-        <button class="icon sm" data-action="jam" data-jam data-icon="jam" title="Modo Jam"></button>
+        <button class="icon sm like" data-action="like" data-icon="heart|heartFilled" title="Like"></button>
+        <button class="icon sm" data-action="jam" data-jam data-icon="jam" title="Jam mode"></button>
         <span class="spacer"></span>
         <button class="icon sm" data-action="menu" data-icon="dots" title="Menu"></button>
-        <button class="icon sm" data-action="hide" data-icon="minus" title="Ocultar (Ctrl+Alt+H)"></button>
+        <button class="icon sm" data-action="hide" data-icon="minus" title="Hide (Ctrl+Alt+H)"></button>
       </header>
 
       <div class="transport reveal">
-        <button class="icon sm hide-mini shuffle" data-action="shuffle" data-icon="shuffle" title="Aleatório"></button>
-        <button class="icon hide-mini" data-action="prev" data-icon="prev" title="Anterior"></button>
+        <button class="icon sm hide-mini shuffle" data-action="shuffle" data-icon="shuffle" title="Shuffle"></button>
+        <button class="icon hide-mini" data-action="prev" data-icon="prev" title="Previous"></button>
         <button class="icon play" data-action="toggle" data-icon="play|pause" title="Play / pause"></button>
-        <button class="icon hide-mini" data-action="next" data-icon="next" title="Próxima"></button>
-        <button class="icon sm hide-mini repeat" data-action="repeat" data-icon="repeat|repeatOne" title="Repetir"></button>
+        <button class="icon hide-mini" data-action="next" data-icon="next" title="Next"></button>
+        <button class="icon sm hide-mini repeat" data-action="repeat" data-icon="repeat|repeatOne" title="Repeat"></button>
       </div>
 
       <div class="meta">
@@ -47,9 +47,9 @@
       <header class="mini-head">
         <div class="mini-meta" id="miniMeta"></div>
         <div class="mini-actions reveal">
-          <button class="icon xs" data-action="next" data-icon="next" title="Próxima"></button>
-          <button class="icon xs like" data-action="like" data-icon="heart|heartFilled" title="Curtir"></button>
-          <button class="icon xs" data-action="jam" data-jam data-icon="jam" title="Modo Jam"></button>
+          <button class="icon xs" data-action="next" data-icon="next" title="Next"></button>
+          <button class="icon xs like" data-action="like" data-icon="heart|heartFilled" title="Like"></button>
+          <button class="icon xs" data-action="jam" data-jam data-icon="jam" title="Jam mode"></button>
           <button class="icon xs" data-action="menu" data-icon="dots" title="Menu"></button>
         </div>
       </header>
@@ -66,7 +66,7 @@
     <div class="empty" id="empty" hidden>
       <div class="empty-actions reveal">
         <button class="icon xs" data-action="menu" data-icon="dots" title="Menu"></button>
-        <button class="icon xs" data-action="hide" data-icon="minus" title="Ocultar"></button>
+        <button class="icon xs" data-action="hide" data-icon="minus" title="Hide"></button>
       </div>
       <div class="empty-icon" id="emptyIcon"></div>
       <div class="empty-text">
@@ -77,14 +77,14 @@
     </div>
 
     <div class="jam" id="jam" hidden>
-      <img class="jam-qr" id="jamQr" alt="QR Code">
+      <img class="jam-qr" id="jamQr" alt="QR code">
       <div class="jam-info">
-        <div class="jam-label">Modo Jam</div>
+        <div class="jam-label">Jam Mode</div>
         <div class="jam-title" id="jamTitle"></div>
         <div class="jam-sub" id="jamSub"></div>
         <div class="jam-buttons">
-          <button class="pill" data-action="jamCopy">Copiar link</button>
-          <button class="pill ghost" data-action="jam">Fechar</button>
+          <button class="pill" data-action="jamCopy">Copy link</button>
+          <button class="pill ghost" data-action="jam">Close</button>
         </div>
       </div>
     </div>

@@ -14,17 +14,17 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 use tauri_plugin_opener::OpenerExt;
 
-const LAYOUTS: [(&str, &str); 3] = [("horizontal", "Horizontal"), ("vertical", "Vertical"), ("mini", "Mini (barra)")];
+const LAYOUTS: [(&str, &str); 3] = [("horizontal", "Horizontal"), ("vertical", "Vertical"), ("mini", "Mini (bar)")];
 const PRESETS: [(&str, &str); 9] = [
-    ("top-left", "Superior esquerdo"),
-    ("top-center", "Superior central"),
-    ("top-right", "Superior direito"),
-    ("middle-left", "Centro esquerdo"),
-    ("middle-center", "Centro"),
-    ("middle-right", "Centro direito"),
-    ("bottom-left", "Inferior esquerdo"),
-    ("bottom-center", "Inferior central"),
-    ("bottom-right", "Inferior direito"),
+    ("top-left", "Top left"),
+    ("top-center", "Top center"),
+    ("top-right", "Top right"),
+    ("middle-left", "Middle left"),
+    ("middle-center", "Center"),
+    ("middle-right", "Middle right"),
+    ("bottom-left", "Bottom left"),
+    ("bottom-center", "Bottom center"),
+    ("bottom-right", "Bottom right"),
 ];
 
 struct Hotkey {
@@ -35,13 +35,13 @@ struct Hotkey {
 }
 
 const HOTKEYS: [Hotkey; 7] = [
-    Hotkey { accel: "Ctrl+Alt+KeyH", display: "Ctrl+Alt+H", label: "Mostrar / ocultar o overlay", action: "toggle_overlay" },
-    Hotkey { accel: "Ctrl+Alt+KeyS", display: "Ctrl+Alt+S", label: "Ativar / desativar click-through", action: "click_through" },
+    Hotkey { accel: "Ctrl+Alt+KeyH", display: "Ctrl+Alt+H", label: "Show / hide the overlay", action: "toggle_overlay" },
+    Hotkey { accel: "Ctrl+Alt+KeyS", display: "Ctrl+Alt+S", label: "Turn click-through on / off", action: "click_through" },
     Hotkey { accel: "Ctrl+Alt+KeyP", display: "Ctrl+Alt+P", label: "Play / pause", action: "play_pause" },
-    Hotkey { accel: "Ctrl+Alt+KeyL", display: "Ctrl+Alt+L", label: "Trocar layout", action: "cycle_layout" },
-    Hotkey { accel: "Ctrl+Alt+KeyT", display: "Ctrl+Alt+T", label: "Mostrar / ocultar tradução", action: "toggle_translation" },
-    Hotkey { accel: "Ctrl+Alt+BracketRight", display: "Ctrl+Alt+]", label: "Adiantar a letra (+250 ms)", action: "offset_plus" },
-    Hotkey { accel: "Ctrl+Alt+BracketLeft", display: "Ctrl+Alt+[", label: "Atrasar a letra (−250 ms)", action: "offset_minus" },
+    Hotkey { accel: "Ctrl+Alt+KeyL", display: "Ctrl+Alt+L", label: "Switch layout", action: "cycle_layout" },
+    Hotkey { accel: "Ctrl+Alt+KeyT", display: "Ctrl+Alt+T", label: "Show / hide translation", action: "toggle_translation" },
+    Hotkey { accel: "Ctrl+Alt+BracketRight", display: "Ctrl+Alt+]", label: "Show lyrics earlier (+250 ms)", action: "offset_plus" },
+    Hotkey { accel: "Ctrl+Alt+BracketLeft", display: "Ctrl+Alt+[", label: "Show lyrics later (−250 ms)", action: "offset_minus" },
 ];
 
 /// WebView2 flags for a small footprint: software rendering keeps the GPU process
@@ -387,7 +387,7 @@ pub fn open_settings(app: &AppHandle, tab: Option<String>) {
     }
     let script = format!("window.__LYRIGLASS_TAB__ = {};", json!(tab.unwrap_or_else(|| "account".into())));
     let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings/index.html".into()))
-        .title("Configurações — Lyriglass")
+        .title("Settings — Lyriglass")
         .inner_size(880.0, 660.0)
         .min_inner_size(720.0, 520.0)
         .center()
@@ -437,42 +437,42 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         .track
         .as_ref()
         .map(|t| truncate(&format!("{} — {}", t.name, t.artists.join(", ")), 52))
-        .unwrap_or_else(|| "Nada tocando".into());
+        .unwrap_or_else(|| "Nothing playing".into());
     menu.append(&MenuItem::with_id(app, "now", now, false, none)?)?;
     if let Some(track) = &state.track {
-        menu.append(&MenuItem::with_id(app, "open_spotify", "Abrir no Spotify", true, none)?)?;
-        menu.append(&MenuItem::with_id(app, "copy_link", "Copiar link da música", track.url.is_some(), none)?)?;
+        menu.append(&MenuItem::with_id(app, "open_spotify", "Open in Spotify", true, none)?)?;
+        menu.append(&MenuItem::with_id(app, "copy_link", "Copy song link", track.url.is_some(), none)?)?;
     }
     menu.append(&PredefinedMenuItem::separator(app)?)?;
 
     let visible = overlay(app).and_then(|w| w.is_visible().ok()).unwrap_or(false);
-    let toggle_label = if visible { "Ocultar overlay\tCtrl+Alt+H" } else { "Mostrar overlay\tCtrl+Alt+H" };
+    let toggle_label = if visible { "Hide overlay\tCtrl+Alt+H" } else { "Show overlay\tCtrl+Alt+H" };
     menu.append(&MenuItem::with_id(app, "toggle_overlay", toggle_label, true, none)?)?;
     menu.append(&CheckMenuItem::with_id(app, "click_through", "Click-through\tCtrl+Alt+S", true, sh.click_through.load(Relaxed), none)?)?;
-    menu.append(&CheckMenuItem::with_id(app, "lock_position", "Travar posição", true, cfg.lock_position, none)?)?;
+    menu.append(&CheckMenuItem::with_id(app, "lock_position", "Lock position", true, cfg.lock_position, none)?)?;
 
     let layout = Submenu::with_id(app, "layout", "Layout", true)?;
     for (value, label) in LAYOUTS {
         layout.append(&CheckMenuItem::with_id(app, format!("layout:{value}"), label, true, cfg.layout == value, none)?)?;
     }
     menu.append(&layout)?;
-    let position = Submenu::with_id(app, "position", "Posição", true)?;
+    let position = Submenu::with_id(app, "position", "Position", true)?;
     for (value, label) in PRESETS {
         position.append(&MenuItem::with_id(app, format!("preset:{value}"), label, true, none)?)?;
     }
     menu.append(&position)?;
     menu.append(&PredefinedMenuItem::separator(app)?)?;
 
-    menu.append(&CheckMenuItem::with_id(app, "show_lyrics", "Mostrar letras", true, cfg.show_lyrics, none)?)?;
-    menu.append(&CheckMenuItem::with_id(app, "show_translation", "Mostrar tradução", cfg.translation_mode != "off", cfg.show_translation, none)?)?;
-    menu.append(&MenuItem::with_id(app, "resync", "Buscar letra novamente", state.track.is_some(), none)?)?;
+    menu.append(&CheckMenuItem::with_id(app, "show_lyrics", "Show lyrics", true, cfg.show_lyrics, none)?)?;
+    menu.append(&CheckMenuItem::with_id(app, "show_translation", "Show translation", cfg.translation_mode != "off", cfg.show_translation, none)?)?;
+    menu.append(&MenuItem::with_id(app, "resync", "Fetch lyrics again", state.track.is_some(), none)?)?;
     if cfg.jam_enabled {
         menu.append(&PredefinedMenuItem::separator(app)?)?;
-        menu.append(&MenuItem::with_id(app, "jam", "Mostrar QR Code da Jam", true, none)?)?;
+        menu.append(&MenuItem::with_id(app, "jam", "Show Jam QR code", true, none)?)?;
     }
     menu.append(&PredefinedMenuItem::separator(app)?)?;
-    menu.append(&MenuItem::with_id(app, "settings", "Configurações…", true, none)?)?;
-    menu.append(&MenuItem::with_id(app, "quit", "Sair", true, none)?)?;
+    menu.append(&MenuItem::with_id(app, "settings", "Settings…", true, none)?)?;
+    menu.append(&MenuItem::with_id(app, "quit", "Quit", true, none)?)?;
     Ok(menu)
 }
 
@@ -572,7 +572,7 @@ pub fn on_hotkey(app: &AppHandle, shortcut: &Shortcut) {
             let delta = if action == "offset_plus" { 250.0 } else { -250.0 };
             let value = (core.config().lyrics_offset_ms + delta).clamp(-5000.0, 5000.0);
             set_config(app, json!({ "lyricsOffsetMs": value }));
-            core.toast(format!("Sincronia da letra: {}{} ms", if value > 0.0 { "+" } else { "" }, value));
+            core.toast(format!("Lyrics offset: {}{} ms", if value > 0.0 { "+" } else { "" }, value));
         }
         _ => {}
     }

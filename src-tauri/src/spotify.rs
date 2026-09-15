@@ -105,10 +105,10 @@ impl Spotify {
     pub async fn login(&self, open_browser: impl FnOnce(String) + Send) -> Result<Profile, String> {
         let client_id = self.client_id();
         if client_id.is_empty() {
-            return Err("Informe o Client ID nas configurações.".into());
+            return Err("Enter your Client ID in Settings.".into());
         }
         if client_id.len() != 32 || !client_id.chars().all(|c| c.is_ascii_hexdigit()) {
-            return Err("O Client ID deve ter 32 caracteres (letras a–f e números).".into());
+            return Err("The Client ID must be 32 characters (letters a–f and numbers).".into());
         }
 
         let verifier = URL_SAFE_NO_PAD.encode(random_bytes(64));
@@ -118,7 +118,7 @@ impl Spotify {
         self.cancel_login();
         let listener = TcpListener::bind("127.0.0.1:8888").await.map_err(|e| {
             if e.kind() == std::io::ErrorKind::AddrInUse {
-                "A porta 8888 está em uso. Feche outros apps de overlay e tente de novo.".to_string()
+                "Port 8888 is in use. Close other overlay apps and try again.".to_string()
             } else {
                 e.to_string()
             }
@@ -143,8 +143,8 @@ impl Spotify {
 
         let code = tokio::select! {
             result = wait_for_callback(&listener, &state) => result,
-            _ = rx => Err("Login cancelado.".to_string()),
-            _ = tokio::time::sleep(Duration::from_secs(300)) => Err("Tempo esgotado aguardando o login.".to_string()),
+            _ = rx => Err("Login cancelled.".to_string()),
+            _ = tokio::time::sleep(Duration::from_secs(300)) => Err("Timed out waiting for login.".to_string()),
         };
         self.login_cancel.lock().unwrap().take();
         drop(listener);
@@ -166,7 +166,7 @@ impl Spotify {
     pub async fn refresh_profile(&self) -> Result<Profile, String> {
         let r = self.request(Method::GET, "/me", &[]).await.map_err(|e| format!("{e:?}"))?;
         if !r.ok() {
-            return Err(format!("Perfil indisponível (HTTP {})", r.status));
+            return Err(format!("Profile unavailable (HTTP {})", r.status));
         }
         let mut images: Vec<(i64, String)> = r.data["images"]
             .as_array()
@@ -363,7 +363,7 @@ async fn wait_for_callback(listener: &TcpListener, expected_state: &str) -> Resu
         let _ = socket.write_all(response.as_bytes()).await;
         return match (ok, code) {
             (true, Some(code)) => Ok(code),
-            _ => Err(error.unwrap_or_else(|| "Resposta de login inválida.".into())),
+            _ => Err(error.unwrap_or_else(|| "Invalid login response.".into())),
         };
     }
 }
@@ -414,10 +414,10 @@ fn percent_decode(s: &str) -> String {
 
 fn callback_page(ok: bool, error: Option<&str>) -> String {
     let (title, icon, message) = if ok {
-        ("Tudo certo!", "🎧", "Login concluído. Pode fechar esta aba e voltar para o Lyriglass.".to_string())
+        ("All set!", "🎧", "Login complete. You can close this tab and go back to Lyriglass.".to_string())
     } else {
-        let safe: String = error.unwrap_or("erro desconhecido").chars().filter(|c| !matches!(c, '<' | '>' | '&' | '"')).collect();
-        ("Não deu certo", "⚠️", format!("O Spotify retornou: {safe}"))
+        let safe: String = error.unwrap_or("unknown error").chars().filter(|c| !matches!(c, '<' | '>' | '&' | '"')).collect();
+        ("Something went wrong", "⚠️", format!("Spotify returned: {safe}"))
     };
     format!(
         r#"<!doctype html><meta charset="utf-8"><title>{title}</title>

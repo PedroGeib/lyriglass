@@ -1,91 +1,91 @@
 # Lyriglass
 
-Overlay de vidro leve para o **Spotify** no Windows, com **letras sincronizadas**, efeito karaokê, tradução e controles de reprodução. Ele fica por cima das outras janelas sem atrapalhar.
+A lightweight glass overlay for **Spotify** on Windows, with **synced lyrics**, a karaoke effect, translation and playback controls. It sits on top of your other windows without getting in the way.
 
-[![Última versão](https://img.shields.io/github/v/release/PedroGeib/lyriglass)](https://github.com/PedroGeib/lyriglass/releases/latest)
-![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078d4)
-![Feito com Tauri](https://img.shields.io/badge/feito%20com-Tauri%202-24c8db)
-[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-green)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/PedroGeib/lyriglass)](https://github.com/PedroGeib/lyriglass/releases/latest)
+![Platform](https://img.shields.io/badge/platform-Windows-0078d4)
+![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-24c8db)
+[![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ## Download
 
-Baixe o instalador **`Lyriglass_<versão>_x64-setup.exe`** na [página de Releases](https://github.com/PedroGeib/lyriglass/releases/latest) e execute.
+Download **`Lyriglass_<version>_x64-setup.exe`** from the [Releases page](https://github.com/PedroGeib/lyriglass/releases/latest) and run it.
 
-O instalador não tem assinatura digital. Na primeira vez, o Windows SmartScreen pode avisar: clique em **Mais informações → Executar assim mesmo**.
+The installer is not code-signed, so Windows SmartScreen may warn you the first time. Click **More info → Run anyway**.
 
-## Recursos
+## Features
 
-- **Letras sincronizadas** do [LRCLIB](https://lrclib.net), com efeito karaokê, ajuste fino de sincronia e "A seguir" com a próxima música.
-- **Tradução das letras** pelo Google Tradutor (grátis) ou pelo Gemini (com a sua chave de API), exibida abaixo de cada verso.
-- **Cache offline**: músicas já buscadas abrem na hora, mesmo sem internet.
-- **Três layouts**: horizontal, vertical e mini.
-- **Controles no overlay**: play/pause, volume rolando o mouse sobre a capa e clique em um verso para pular até ele.
-- **Visual ajustável**: opacidade, tamanho, cor de destaque tirada da capa, recolher quando não há letra e ocultar quando nada está tocando.
-- **Modo Jam**: mostra um QR Code para os amigos entrarem na sua Jam ou abrirem a música atual.
-- **Atalhos globais** que funcionam em qualquer lugar do Windows.
-- Ícone na bandeja, iniciar com o Windows e posição lembrada entre sessões.
+- **Synced lyrics** from [LRCLIB](https://lrclib.net), with a karaoke effect, fine-tuning of the timing and an "Up next" line.
+- **Lyrics translation** with Google Translate (free) or Gemini (with your own API key), shown below each line.
+- **Offline cache**: songs you've already played open instantly, even without internet.
+- **Three layouts**: horizontal, vertical and mini.
+- **Controls on the overlay**: play/pause, previous/next, shuffle, repeat, like, volume by scrolling over the cover, and click a line to jump to it.
+- **Customizable look**: opacity, size, accent color from the album cover, collapse when there are no lyrics, and hide when nothing is playing.
+- **Jam mode**: shows a QR code so friends can join your Jam or open the current song.
+- **Global hotkeys** that work anywhere in Windows.
+- Tray icon, launch with Windows, and the position is remembered between sessions.
 
-## Primeiros passos: conectar o Spotify
+## Getting started: connect Spotify
 
-O Lyriglass usa a Web API oficial do Spotify. Para isso, cada pessoa cria um app gratuito no painel de desenvolvedores do Spotify e usa o **Client ID** dele. Leva uns 2 minutos:
+Lyriglass uses the official Spotify Web API, which requires each person to create a free app in Spotify's developer dashboard and use its **Client ID**. It takes about 2 minutes:
 
-1. Abra o **[Spotify Developer Dashboard](https://developer.spotify.com/dashboard)** e entre com a sua conta do Spotify. Na primeira vez, aceite os termos de desenvolvedor.
-2. Clique em **Create app**.
-3. Em **App name** e **App description**, escreva qualquer coisa (por exemplo, `Lyriglass`).
-4. Em **Redirect URIs**, adicione exatamente:
+1. Open the **[Spotify Developer Dashboard](https://developer.spotify.com/dashboard)** and log in with your Spotify account. The first time, accept the developer terms.
+2. Click **Create app**.
+3. In **App name** and **App description**, enter anything (for example, `Lyriglass`).
+4. Under **Redirect URIs**, add exactly:
    ```text
    http://127.0.0.1:8888/callback
    ```
-5. Em **Which API/SDKs are you planning to use?**, marque **Web API**, aceite os termos e clique em **Save**.
-6. Na página do app criado, copie o **Client ID**.
-7. No Lyriglass, abra **Configurações → Conta**, cole o Client ID e clique em **Conectar com Spotify**.
+5. Under **Which API/SDKs are you planning to use?**, check **Web API**, accept the terms and click **Save**.
+6. On the new app's page, copy the **Client ID**.
+7. In Lyriglass, open **Settings → Account**, paste the Client ID and click **Connect with Spotify**.
 
-O mesmo passo a passo aparece dentro do app, na aba **Conta**.
+The same guide is available inside the app, in the **Account** tab.
 
-- Apps novos ficam em **modo de desenvolvimento**: só entram as contas cadastradas em **User Management**, no painel do app. A sua conta, como dona do app, já está liberada.
-- **Controlar a reprodução** (play/pause, pular, volume) exige **Spotify Premium**, uma exigência da própria API do Spotify. Ver a música atual e as letras funciona em qualquer conta.
-- O login usa **PKCE**: nenhum Client Secret é necessário nem armazenado.
+- New apps start in **development mode**: only accounts added under **User Management** in the app's dashboard can log in. Your own account, as the app owner, already has access.
+- **Controlling playback** (play/pause, skip, volume) requires **Spotify Premium**. This is a Spotify API requirement. Seeing the current song and the lyrics works with any account.
+- Login uses **PKCE**: no Client Secret is needed or stored.
 
-## Atalhos
+## Hotkeys
 
-| Atalho | Ação |
+| Hotkey | Action |
 | --- | --- |
-| `Ctrl+Alt+H` | Mostrar / ocultar o overlay |
-| `Ctrl+Alt+S` | Ativar / desativar click-through |
+| `Ctrl+Alt+H` | Show / hide the overlay |
+| `Ctrl+Alt+S` | Turn click-through on / off |
 | `Ctrl+Alt+P` | Play / pause |
-| `Ctrl+Alt+L` | Trocar layout |
-| `Ctrl+Alt+T` | Mostrar / ocultar tradução |
-| `Ctrl+Alt+]` | Adiantar a letra (+250 ms) |
-| `Ctrl+Alt+[` | Atrasar a letra (−250 ms) |
+| `Ctrl+Alt+L` | Switch layout |
+| `Ctrl+Alt+T` | Show / hide translation |
+| `Ctrl+Alt+]` | Show lyrics earlier (+250 ms) |
+| `Ctrl+Alt+[` | Show lyrics later (−250 ms) |
 
-No overlay:
+On the overlay:
 
-| Gesto | Ação |
+| Gesture | Action |
 | --- | --- |
-| Rolar o mouse sobre a capa | Volume |
-| Clicar em um verso | Pula para aquele trecho |
-| Rolar a letra | Navega livremente por 4 s |
-| Botão direito | Menu rápido |
-| Arrastar a alça do topo | Move o overlay |
+| Scroll over the cover | Volume |
+| Click a line | Jump to that part of the song |
+| Scroll the lyrics | Browse freely for 4 s |
+| Right-click | Quick menu |
+| Drag the top handle | Move the overlay |
 
-## Privacidade
+## Privacy
 
-Tudo fica no seu computador, na pasta `%APPDATA%\com.pedrogeib.lyriglass`:
+Everything stays on your computer, in `%APPDATA%\com.pedrogeib.lyriglass`:
 
-- **Configurações**: `config.json`
-- **Tokens do Spotify e chave do Gemini**: `secrets.dat`, criptografado com a proteção de dados do Windows (DPAPI), que só pode ser lido pelo seu usuário do Windows
-- **Cache de letras**: `lyrics-cache\`
+- **Settings**: `config.json`
+- **Spotify tokens and Gemini key**: `secrets.dat`, encrypted with Windows data protection (DPAPI) so only your Windows user can read it
+- **Lyrics cache**: `lyrics-cache\`
 
-O app só se comunica com o Spotify, com o LRCLIB e, se a tradução estiver ligada, com o Google Tradutor ou o Gemini.
+The app only talks to Spotify, LRCLIB and, if translation is turned on, Google Translate or Gemini.
 
-## Compilar a partir do código
+## Building from source
 
-Requisitos:
+Requirements:
 
-- Windows 10 ou 11
-- [Node.js](https://nodejs.org/) 18 ou mais novo
+- Windows 10 or 11
+- [Node.js](https://nodejs.org/) 18 or newer
 - [Rust](https://www.rust-lang.org/tools/install)
-- [Pré-requisitos do Tauri](https://v2.tauri.app/start/prerequisites/) para Windows (Microsoft C++ Build Tools e WebView2)
+- The [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for Windows (Microsoft C++ Build Tools and WebView2)
 
 ```bash
 git clone https://github.com/PedroGeib/lyriglass.git
@@ -99,42 +99,42 @@ cd lyriglass
 npm install
 ```
 
-Rodar em modo de desenvolvimento:
+Run in development mode:
 
 ```bash
 npm run dev
 ```
 
-Gerar o executável e o instalador:
+Build the executable and installer:
 
 ```bash
 npm run build
 ```
 
-O resultado fica em `src-tauri\target\release\` (o `.exe`) e em `src-tauri\target\release\bundle\nsis\` (o instalador).
+The output goes to `src-tauri\target\release\` (the `.exe`) and `src-tauri\target\release\bundle\nsis\` (the installer).
 
-## Estrutura do projeto
+## Project structure
 
 ```text
-ui/                  Interface (HTML, CSS e JavaScript puro, sem bundler)
-  api.js             Ponte com o backend Tauri
-  overlay/           Janela do overlay
-  settings/          Janela de configurações
-src-tauri/           Backend em Rust (Tauri 2)
-  src/main.rs        Inicialização e registro dos comandos
-  src/shell.rs       Janelas, bandeja, atalhos globais e eventos
-  src/commands.rs    Comandos expostos à interface
-  src/spotify.rs     Login PKCE e cliente da Web API do Spotify
-  src/player.rs      Estado da reprodução e sincronia das letras
-  src/lyrics.rs      Busca no LRCLIB, cache e tradução
-  src/store.rs       Configurações e segredos criptografados
-assets/              Ícone original
+ui/                  Interface (plain HTML, CSS and JavaScript, no bundler)
+  api.js             Bridge to the Tauri backend
+  overlay/           Overlay window
+  settings/          Settings window
+src-tauri/           Rust backend (Tauri 2)
+  src/main.rs        Startup and command registration
+  src/shell.rs       Windows, tray, global hotkeys and events
+  src/commands.rs    Commands exposed to the interface
+  src/spotify.rs     PKCE login and Spotify Web API client
+  src/player.rs      Playback state and lyrics sync
+  src/lyrics.rs      LRCLIB lookup, cache and translation
+  src/store.rs       Settings and encrypted secrets
+assets/              Source icon
 ```
 
-## Licença
+## License
 
 [MIT](LICENSE)
 
-## Aviso
+## Disclaimer
 
-O Lyriglass é um projeto independente e não tem ligação com o Spotify nem é endossado por ele. Spotify é marca registrada da Spotify AB. As letras vêm do LRCLIB e pertencem aos seus respectivos autores.
+Lyriglass is an independent project and is not affiliated with or endorsed by Spotify. Spotify is a trademark of Spotify AB. Lyrics come from LRCLIB and belong to their respective owners.

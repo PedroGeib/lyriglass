@@ -1,4 +1,4 @@
-// `api` é criado por ../api.js (ponte com o backend Tauri); não redeclarar.
+// `api` is created by ../api.js (bridge to the Tauri backend); don’t redeclare it.
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -108,19 +108,19 @@ function renderAuth(auth) {
     img.src = auth.profile.image;
     avatar.append(img);
   }
-  $('accName').textContent = auth.loggedIn ? name || 'Conta conectada' : 'Não conectado';
+  $('accName').textContent = auth.loggedIn ? name || 'Connected account' : 'Not connected';
   $('accSub').textContent = auth.demo
-    ? 'Rodando com dados de exemplo'
+    ? 'Running with sample data'
     : auth.loggedIn
-      ? auth.profile?.product === 'premium' ? 'Spotify Premium · controles liberados' : 'Conectado ao Spotify'
-      : 'Faça login para começar';
+      ? auth.profile?.product === 'premium' ? 'Spotify Premium · controls enabled' : 'Connected to Spotify'
+      : 'Log in to get started';
   $('btnLogin').hidden = auth.loggedIn;
   $('btnLogout').hidden = !auth.loggedIn || auth.demo;
   if (auth.redirectUri) $('redirectUri').textContent = auth.redirectUri;
 }
 
 function renderKeyStatus(has) {
-  $('keyStatus').textContent = has ? '✓ Chave salva com segurança neste computador.' : 'Nenhuma chave salva.';
+  $('keyStatus').textContent = has ? '✓ Key saved securely on this computer.' : 'No key saved.';
   $('btnClearKey').hidden = !has;
 }
 
@@ -141,7 +141,7 @@ function renderInfo(info) {
     if (!hk.ok) {
       const fail = document.createElement('span');
       fail.className = 'badge-fail';
-      fail.textContent = 'em uso por outro app';
+      fail.textContent = 'in use by another app';
       row.append(fail);
     }
     const keys = document.createElement('span');
@@ -164,8 +164,8 @@ async function refreshJamPreview() {
   const target = link || track?.url || 'https://open.spotify.com';
   $('jamPreview').src = await api.jamQr(target);
   $('jamPreviewText').textContent = link
-    ? `Leva para: ${link}`
-    : track ? `Sem link de Jam — abre “${track.name}”.` : 'Sem link de Jam — abre o Spotify.';
+    ? `Opens: ${link}`
+    : track ? `No Jam link: opens “${track.name}”.` : 'No Jam link: opens Spotify.';
 }
 
 function showClientIdGuide() {
@@ -204,7 +204,7 @@ function bindEvents() {
     }
     const copy = e.target.closest('[data-copy]');
     if (copy) {
-      api.copy($(copy.dataset.copy).textContent).then(() => snack('Copiado!'));
+      api.copy($(copy.dataset.copy).textContent).then(() => snack('Copied!'));
       return;
     }
     const preset = e.target.closest('[data-preset]');
@@ -214,17 +214,17 @@ function bindEvents() {
   $('btnLogin').addEventListener('click', async () => {
     const btn = $('btnLogin');
     btn.disabled = true;
-    btn.textContent = 'Aguardando o navegador…';
+    btn.textContent = 'Waiting for the browser…';
     $('btnCancelLogin').hidden = false;
     $('loginHint').hidden = false;
     $('authMessage').hidden = true;
     const result = await api.login();
     btn.disabled = false;
-    btn.textContent = 'Conectar com Spotify';
+    btn.textContent = 'Connect with Spotify';
     $('btnCancelLogin').hidden = true;
     $('loginHint').hidden = true;
-    if (result.ok) snack(`Conectado como ${result.profile.name}`);
-    else if (result.error !== 'Login cancelado.') {
+    if (result.ok) snack(`Connected as ${result.profile.name}`);
+    else if (result.error !== 'Login cancelled.') {
       $('authMessage').textContent = result.error;
       $('authMessage').hidden = false;
       if (/client id|client_id/i.test(result.error)) showClientIdGuide();
@@ -236,7 +236,7 @@ function bindEvents() {
 
   $('btnLogout').addEventListener('click', async () => {
     renderAuth(await api.logout());
-    snack('Conta desconectada');
+    snack('Account disconnected');
   });
 
   $('btnSaveKey').addEventListener('click', async () => {
@@ -244,12 +244,12 @@ function bindEvents() {
     if (!key) return;
     renderKeyStatus(await api.setGeminiKey(key));
     $('geminiKey').value = '';
-    snack('Chave do Gemini salva');
+    snack('Gemini key saved');
   });
 
   $('btnClearKey').addEventListener('click', async () => {
     renderKeyStatus(await api.setGeminiKey(''));
-    snack('Chave removida');
+    snack('Key removed');
   });
 
   $('btnResetOffset').addEventListener('click', () => {
@@ -258,7 +258,7 @@ function bindEvents() {
 
   $('btnClearCache').addEventListener('click', async () => {
     const count = await api.clearLyricsCache();
-    snack(`${count} ${count === 1 ? 'letra removida' : 'letras removidas'} do cache`);
+    snack(`Removed ${count} ${count === 1 ? 'song' : 'songs'} from the lyrics cache`);
   });
 
   $('btnOpenData').addEventListener('click', () => api.openDataFolder());

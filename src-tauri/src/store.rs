@@ -77,7 +77,7 @@ impl Default for Config {
             lyrics_offset_ms: 0.0,
             show_translation: true,
             translation_mode: "off".into(),
-            translation_target: "pt".into(),
+            translation_target: "en".into(),
             gemini_model: "gemini-2.5-flash".into(),
             show_next_up: true,
             jam_enabled: false,
