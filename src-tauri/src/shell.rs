@@ -144,6 +144,10 @@ fn create_overlay(app: &AppHandle) -> tauri::Result<()> {
 
     place_initially(&win, &cfg, w, h);
     win.show()?;
+    #[cfg(windows)]
+    if let Ok(hwnd) = win.hwnd() {
+        topmost::install(hwnd.0 as isize, cfg.always_on_top);
+    }
 
     let handle = app.clone();
     win.on_window_event(move |event| match event {
@@ -259,6 +263,7 @@ pub fn show_overlay(app: &AppHandle) {
     sh.auto_hidden.store(false, Relaxed);
     let _ = win.show();
     let _ = win.set_always_on_top(core(app).config().always_on_top);
+    topmost::raise();
     refresh_tray(app);
 }
 
@@ -351,6 +356,7 @@ pub fn set_config(app: &AppHandle, patch: Value) -> Config {
         if let Some(win) = overlay(app) {
             let _ = win.set_always_on_top(cfg.always_on_top);
         }
+        topmost::set_enabled(cfg.always_on_top);
     }
     if has(&["launchAtLogin"]) {
         use tauri_plugin_autostart::ManagerExt;
@@ -584,4 +590,65 @@ fn truncate(text: &str, max: usize) -> String {
     } else {
         text.to_string()
     }
+}
+
+/// Keeps the overlay above other windows, including borderless-fullscreen games.
+/// Setting "always on top" once is not enough on Windows: the flag can be lost and
+/// the most recently raised window wins, so the overlay re-raises itself every time
+/// another app takes the foreground (event-driven, no polling).
+#[cfg(windows)]
+mod topmost {
+    use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering::Relaxed};
+    use windows_sys::Win32::Foundation::HWND;
+    use windows_sys::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, EVENT_SYSTEM_FOREGROUND, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, WINEVENT_OUTOFCONTEXT,
+        WINEVENT_SKIPOWNPROCESS,
+    };
+
+    static OVERLAY: AtomicIsize = AtomicIsize::new(0);
+    static ENABLED: AtomicBool = AtomicBool::new(false);
+
+    /// Must be called on the main thread: the hook is delivered through its message loop.
+    pub fn install(hwnd: isize, enabled: bool) {
+        OVERLAY.store(hwnd, Relaxed);
+        ENABLED.store(enabled, Relaxed);
+        unsafe {
+            SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                std::ptr::null_mut(),
+                Some(on_foreground),
+                0,
+                0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
+            );
+        }
+        raise();
+    }
+
+    pub fn set_enabled(enabled: bool) {
+        ENABLED.store(enabled, Relaxed);
+        raise();
+    }
+
+    pub fn raise() {
+        let hwnd = OVERLAY.load(Relaxed);
+        if hwnd != 0 && ENABLED.load(Relaxed) {
+            unsafe {
+                SetWindowPos(hwnd as HWND, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+            }
+        }
+    }
+
+    unsafe extern "system" fn on_foreground(_: HWINEVENTHOOK, _: u32, _: HWND, _: i32, _: i32, _: u32, _: u32) {
+        raise();
+    }
+}
+
+#[cfg(not(windows))]
+mod topmost {
+    pub fn install(_: isize, _: bool) {}
+    pub fn set_enabled(_: bool) {}
+    pub fn raise() {}
 }
