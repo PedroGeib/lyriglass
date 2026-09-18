@@ -43,7 +43,7 @@ let pendingVolume = null;
 let volumeTimer = 0;
 let volumeOpen = false;
 let lastVolume = 50;
-let lyricsWidthSent = 0;
+let lyricsWidthSent = { layout: '', width: 0 };
 const measureCtx = document.createElement('canvas').getContext('2d');
 const LYRICS_FONT = '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif';
 let toastTimer = 0;
@@ -321,24 +321,29 @@ function renderLyrics() {
   else $('lyricsScroll').scrollTop = 0;
 }
 
-// In the horizontal layout the window narrows to the widest line of the current
-// song, so short lyrics don't leave an empty band on the right. Canvas text
-// metrics are in CSS pixels regardless of the Size (zoom) setting.
+// The window width follows the widest line of the current song: the horizontal
+// layout narrows so short lyrics don't leave an empty band, and the mini layout
+// widens so its single line isn't cut off. The backend clamps the width per
+// layout. Canvas text metrics are in CSS pixels regardless of the Size (zoom).
 function fitLyricsWidth() {
-  if (cfg.layout !== 'horizontal' || !lineEls.length) return;
+  const mini = cfg.layout === 'mini';
+  if ((!mini && cfg.layout !== 'horizontal') || !lineEls.length) return;
+  // Mini lines are 1px larger; horizontal draws the active line 3.5% larger.
+  const size = mini ? cfg.lyricsFontSize + 1 : cfg.lyricsFontSize;
+  const grow = mini ? 1 : 1.035;
+  const padding = mini ? 28 : 40;
   let widest = 0;
-  measureCtx.font = `700 ${cfg.lyricsFontSize}px ${LYRICS_FONT}`;
+  measureCtx.font = `700 ${size}px ${LYRICS_FONT}`;
   for (const el of lineEls) {
     const text = el.querySelector('.txt')?.textContent;
-    // The active line is drawn 3.5% larger.
-    if (text) widest = Math.max(widest, measureCtx.measureText(text).width * 1.035);
+    if (text) widest = Math.max(widest, measureCtx.measureText(text).width * grow);
   }
-  measureCtx.font = `500 ${cfg.lyricsFontSize * 0.8}px ${LYRICS_FONT}`;
+  measureCtx.font = `500 ${size * 0.8}px ${LYRICS_FONT}`;
   for (const el of $$('.line .tr')) widest = Math.max(widest, measureCtx.measureText(el.textContent).width);
-  // 20px padding on each side, plus a little room so lines don't wrap by a hair.
-  const width = Math.ceil(widest + 52);
-  if (Math.abs(width - lyricsWidthSent) < 4) return;
-  lyricsWidthSent = width;
+  // Side padding plus a little room so lines don't wrap or cut by a hair.
+  const width = Math.ceil(widest + padding + 12);
+  if (lyricsWidthSent.layout === cfg.layout && Math.abs(width - lyricsWidthSent.width) < 4) return;
+  lyricsWidthSent = { layout: cfg.layout, width };
   api.setLyricsWidth(width);
 }
 

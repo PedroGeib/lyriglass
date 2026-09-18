@@ -115,16 +115,23 @@ pub fn auth_info(core: &Core) -> Value {
 }
 
 // ------------------------------------------------------------------ overlay
-/// Horizontal layout: bounds of the lyrics column, which fits the widest line of
-/// the current song. The rest of the window is the 200px cover plus the 8px margins.
+/// Bounds of the lyrics column, which fits the widest line of the current song
+/// (reported by the overlay) and falls back to the default when unknown.
+/// Horizontal: the rest of the window is the 200px cover plus the 8px margins,
+/// and the default is the widest. Mini: the rest is the 88px cover plus margins,
+/// and the default is the narrowest, so the single line can grow when needed.
 const LYRICS_COLUMN: (f64, f64) = (200.0, 344.0);
+const MINI_COLUMN: (f64, f64) = (336.0, 560.0);
 
 fn overlay_size(cfg: &Config, compact: bool, lyrics_width: Option<f64>) -> (f64, f64) {
-    let lyrics = lyrics_width.unwrap_or(LYRICS_COLUMN.1).clamp(LYRICS_COLUMN.0, LYRICS_COLUMN.1);
+    let column = |(min, max): (f64, f64), default: f64| lyrics_width.unwrap_or(default).clamp(min, max);
     let (full, small) = match cfg.layout.as_str() {
         "vertical" => ((296.0, 548.0), (296.0, 296.0)),
-        "mini" => ((440.0, 104.0), (440.0, 104.0)),
-        _ => ((216.0 + lyrics, 216.0), (216.0, 216.0)),
+        "mini" => {
+            let w = 104.0 + column(MINI_COLUMN, MINI_COLUMN.0);
+            ((w, 104.0), (w, 104.0))
+        }
+        _ => ((216.0 + column(LYRICS_COLUMN, LYRICS_COLUMN.1), 216.0), (216.0, 216.0)),
     };
     let (w, h) = if compact { small } else { full };
     (w * cfg.scale, h * cfg.scale)
@@ -359,6 +366,11 @@ pub fn set_config(app: &AppHandle, patch: Value) -> Config {
     let has = |keys: &[&str]| changed.iter().any(|k| keys.contains(&k.as_str()));
 
     if has(&["layout", "scale"]) {
+        if has(&["layout"]) {
+            // The width reported for the old layout doesn't apply to the new one;
+            // the overlay reports a fresh one right after switching.
+            *shell(app).lyrics_width.lock().unwrap() = None;
+        }
         resize_overlay(app);
     }
     if has(&["alwaysOnTop"]) {
