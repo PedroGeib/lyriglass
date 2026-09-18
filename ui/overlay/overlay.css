@@ -353,7 +353,10 @@ svg { display: block; fill: currentColor; }
 .layout-mini .line { padding: 2px 0; opacity: 0; transform: translateY(10px); font-size: calc(var(--lyrics-size) + 1px); }
 .layout-mini .line.past { transform: translateY(-10px); }
 .layout-mini .line.active { opacity: 1; transform: none; }
-.layout-mini .line, .layout-mini .line .tr { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Long lines wrap onto a second line instead of widening the window; a
+   translation, when shown, takes the second line of short ones. */
+.layout-mini .line { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.2; }
+.layout-mini .line .tr { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .layout-mini .lyrics-status { top: 30px; place-items: center start; text-align: left; padding: 0 14px; }
 
 /* ----------------------------------------------------------------- empty */
