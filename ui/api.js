@@ -17,6 +17,7 @@
     command: (name, arg) => invoke('player_command', { name, arg: arg ?? null }),
 
     setCompact: (value) => invoke('overlay_compact', { value }),
+    setLyricsWidth: (value) => invoke('overlay_lyrics_width', { value }),
     hideOverlay: () => invoke('overlay_hide'),
     showMenu: () => invoke('overlay_menu'),
     movePreset: (preset) => invoke('overlay_preset', { preset }),

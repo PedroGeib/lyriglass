@@ -53,6 +53,8 @@ const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreen
 #[derive(Default)]
 pub struct Shell {
     pub compact: AtomicBool,
+    /// Width the lyrics column needs for the current song, reported by the overlay.
+    pub lyrics_width: Mutex<Option<f64>>,
     pub click_through: AtomicBool,
     user_hidden: AtomicBool,
     auto_hidden: AtomicBool,
@@ -113,11 +115,16 @@ pub fn auth_info(core: &Core) -> Value {
 }
 
 // ------------------------------------------------------------------ overlay
-fn overlay_size(cfg: &Config, compact: bool) -> (f64, f64) {
+/// Horizontal layout: bounds of the lyrics column, which fits the widest line of
+/// the current song. The rest of the window is the 200px cover plus the 8px margins.
+const LYRICS_COLUMN: (f64, f64) = (200.0, 344.0);
+
+fn overlay_size(cfg: &Config, compact: bool, lyrics_width: Option<f64>) -> (f64, f64) {
+    let lyrics = lyrics_width.unwrap_or(LYRICS_COLUMN.1).clamp(LYRICS_COLUMN.0, LYRICS_COLUMN.1);
     let (full, small) = match cfg.layout.as_str() {
         "vertical" => ((296.0, 548.0), (296.0, 296.0)),
         "mini" => ((440.0, 104.0), (440.0, 104.0)),
-        _ => ((560.0, 216.0), (216.0, 216.0)),
+        _ => ((216.0 + lyrics, 216.0), (216.0, 216.0)),
     };
     let (w, h) = if compact { small } else { full };
     (w * cfg.scale, h * cfg.scale)
@@ -125,7 +132,7 @@ fn overlay_size(cfg: &Config, compact: bool) -> (f64, f64) {
 
 fn create_overlay(app: &AppHandle) -> tauri::Result<()> {
     let cfg = core(app).config();
-    let (w, h) = overlay_size(&cfg, false);
+    let (w, h) = overlay_size(&cfg, false, None);
     let win = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("overlay/index.html".into()))
         .title("Lyriglass")
         .inner_size(w, h)
@@ -206,7 +213,9 @@ fn clamp_overlay(win: &WebviewWindow) {
 pub fn resize_overlay(app: &AppHandle) {
     let Some(win) = overlay(app) else { return };
     let cfg = core(app).config();
-    let (w, h) = overlay_size(&cfg, shell(app).compact.load(Relaxed));
+    let sh = shell(app);
+    let lyrics_width = *sh.lyrics_width.lock().unwrap();
+    let (w, h) = overlay_size(&cfg, sh.compact.load(Relaxed), lyrics_width);
     let (Ok(pos), Ok(size)) = (win.outer_position(), win.outer_size()) else { return };
     let Some((ax, ay, aw, ah, sf)) = work_area(&win) else { return };
 

@@ -49,6 +49,18 @@ pub fn overlay_compact(app: AppHandle, shell: State<Shell>, value: bool) {
     }
 }
 
+/// Width the lyrics column needs for the current song (horizontal layout).
+#[tauri::command]
+pub fn overlay_lyrics_width(app: AppHandle, shell: State<Shell>, value: f64) {
+    if !value.is_finite() {
+        return;
+    }
+    let changed = shell.lyrics_width.lock().unwrap().replace(value) != Some(value);
+    if changed {
+        shell::resize_overlay(&app);
+    }
+}
+
 #[tauri::command]
 pub fn overlay_hide(app: AppHandle) {
     shell::hide_overlay(&app, true);

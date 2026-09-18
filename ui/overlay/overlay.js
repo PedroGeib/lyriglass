@@ -43,6 +43,9 @@ let pendingVolume = null;
 let volumeTimer = 0;
 let volumeOpen = false;
 let lastVolume = 50;
+let lyricsWidthSent = 0;
+const measureCtx = document.createElement('canvas').getContext('2d');
+const LYRICS_FONT = '"Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif';
 let toastTimer = 0;
 let emptyAction = null;
 
@@ -103,6 +106,7 @@ function applyConfig(prev) {
   if (jamOpen && prev.jamLink !== cfg.jamLink) refreshJam();
   if (prev.layout !== cfg.layout || prev.scale !== cfg.scale) closeVolume();
   if (prev.layout !== cfg.layout || prev.lyricsFontSize !== cfg.lyricsFontSize) {
+    fitLyricsWidth();
     requestAnimationFrame(() => {
       updateMarquee();
       scrollToActive('instant');
@@ -311,9 +315,31 @@ function renderLyrics() {
     lineEls.push(el);
   });
   inner.append(frag);
+  fitLyricsWidth();
 
   if (L.synced) draw(true);
   else $('lyricsScroll').scrollTop = 0;
+}
+
+// In the horizontal layout the window narrows to the widest line of the current
+// song, so short lyrics don't leave an empty band on the right. Canvas text
+// metrics are in CSS pixels regardless of the Size (zoom) setting.
+function fitLyricsWidth() {
+  if (cfg.layout !== 'horizontal' || !lineEls.length) return;
+  let widest = 0;
+  measureCtx.font = `700 ${cfg.lyricsFontSize}px ${LYRICS_FONT}`;
+  for (const el of lineEls) {
+    const text = el.querySelector('.txt')?.textContent;
+    // The active line is drawn 3.5% larger.
+    if (text) widest = Math.max(widest, measureCtx.measureText(text).width * 1.035);
+  }
+  measureCtx.font = `500 ${cfg.lyricsFontSize * 0.8}px ${LYRICS_FONT}`;
+  for (const el of $$('.line .tr')) widest = Math.max(widest, measureCtx.measureText(el.textContent).width);
+  // 20px padding on each side, plus a little room so lines don't wrap by a hair.
+  const width = Math.ceil(widest + 52);
+  if (Math.abs(width - lyricsWidthSent) < 4) return;
+  lyricsWidthSent = width;
+  api.setLyricsWidth(width);
 }
 
 function findLine(t) {
@@ -523,6 +549,12 @@ function bindEvents() {
   });
 
   $('emptyAction').addEventListener('click', () => emptyAction?.());
+
+  // The window width follows the lyrics; keep the current line centered after a resize.
+  window.addEventListener('resize', () => requestAnimationFrame(() => {
+    updateMarquee();
+    scrollToActive('instant');
+  }));
 
   document.addEventListener('contextmenu', (e) => {
     e.preventDefault();

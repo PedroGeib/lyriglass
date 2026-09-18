@@ -35,6 +35,7 @@ fn main() {
             commands::state_get,
             commands::player_command,
             commands::overlay_compact,
+            commands::overlay_lyrics_width,
             commands::overlay_hide,
             commands::overlay_menu,
             commands::overlay_preset,
